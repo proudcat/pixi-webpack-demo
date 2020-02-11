@@ -8,8 +8,6 @@ const app = new PIXI.Application({
   resolution: window.devicePixelRatio || 1
 });
 
-app.stage.addChild(container);
-
 const texture = PIXI.Texture.from('assets/bunny.png');
 const bunny = new PIXI.Sprite(texture);
 bunny.anchor.set(0.5);
