@@ -1,0 +1,15 @@
+{
+  "name": "pixi-webpack-demo",
+  "version": "1.0.0",
+  "description": "make pixi.js game with webpack and gulp",
+  "main": "src/js/main.js",
+  "keywords": [
+    "pixi.js",
+    "webpack"
+  ],
+  "author": "yulijun",
+  "license": "MIT",
+  "dependencies": {
+    "pixi.js": "^5.2.1"
+  }
+}
