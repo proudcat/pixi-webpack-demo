@@ -1,7 +1,7 @@
 {
   "name": "pixi-webpack-demo",
   "version": "1.0.0",
-  "description": "make pixi.js game with webpack and gulp",
+  "description": "make pixi.js game with webpack",
   "main": "src/js/main.js",
   "keywords": [
     "pixi.js",
@@ -13,7 +13,7 @@
     "start": "webpack-dev-server --open 'google chrome' --config webpack.dev.js",
     "clean": "rimraf dist",
     "prebuild": "npm run clean",
-    "build": "gulp dist"
+    "build": "webpack --config webpack.prod.js"
   },
   "dependencies": {
     "@babel/runtime": "^7.8.4",
@@ -25,9 +25,8 @@
     "@babel/plugin-transform-runtime": "^7.8.3",
     "@babel/preset-env": "^7.8.4",
     "babel-loader": "^8.0.6",
-    "gulp": "^4.0.2",
-    "gulp-if": "^3.0.0",
-    "gulp-imagemin": "^7.1.0",
+    "copy-webpack-plugin": "^5.1.1",
+    "imagemin-webpack-plugin": "^2.4.2",
     "rimraf": "^3.0.2",
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10",
