@@ -1,14 +1,15 @@
-> this tutorial shows you how to make `pixi.js` game with `webpack` and `es6+`, how to optimize `image` assets and how to config `babel` to optimize `js` and convert`ES6+`to `ES5`.
+> 本文介绍怎么使用`webpack`搭建`pixi.js`游戏的开发环境，怎么配置`babel`优化代码(tree shake)、混淆代码，并最终将`ES6+`转换为`ES5`,怎么优化`图片`资源并最终发布项目。
 
-[中文文档](./doc/README_ZH-CN.md)
+### 前提
+* 需要会简单使用`nodejs`，了解`package.json`，会简单使用`npm init`，`npm install`，`npm run`命令。
 
-### required 
-* you should have `nodejs` installed and have some basic knowledge of `package.json` file, `npm init/install/run` command.
-* you should have `google chrome` installed for running the project.
-* basic knowledge of `webpack` and `babel`.
-* it's better for you to have basic knowledge of `git`, the project [pixi-webpack-demo](https://github.com/proudcat/pixi-webpack-demo) is hosted on github, you can learn step by step by `git checkout` different branch, now `git clone` the project。
+* 需要稍微了解`webpack`和`babel`。
 
-* for easy understanding, paste out the project directory here at the very first.
+* 需要有`google chrome`浏览器。
+
+* 最好会一点`git`，demo项目[pixi-webpack-demo](https://github.com/proudcat/pixi-webpack-demo)托管在`github`上，通过切换不同分支演示一步一步项目的构建过程，现在把项目`clone`下来吧。
+
+* 为了更容易理解，这里先贴出来项目最终的目录结构
 
   ```tex
   .
@@ -29,12 +30,17 @@
   └── webpack.prod.js
   ```
 
-### [step1] initialize the project
-> run command `git checkout init` to checkout `init` branch to learn this step.
+  
 
-* make directory `pixi-webpack-demo`, run `npm init` command under `pixi-webpack-demo` directory to initialize the project, fill the information, it will create a `package.json` file finally.
-* run `npm install --save pixi.js` command to install `pixi.js`.
-* after finish the two step before the `package.json` file should like this:
+### 构建环境
+* `nodejs`：需要node环境，前端项目现在基本都是基于node项目创建的，node的包管理系统和工具链很方便。
+* `git`：非必须，看demo时候切分支用。
+
+### 初始化项目
+> 运行`git checkout init`切换到`init`分支即可看到这一步的示例。
+* 创建目录`pixi-webpack-demo`，在`pixi-webpack-demo`根目录下运行`npm init`命令初始化项目，按照提示输入项目信息，完成后生成一个`package.json`文件。
+* 运行`npm install --save pixi.js`安装依赖。
+* 完成上面两步，`package.json`文件如下所示：
 
   ```json
   {
@@ -43,7 +49,7 @@
     "description": "make pixi.js game with webpack",
     "main": "src/js/main.js",
     "keywords": ["pixi.js","webpack"],
-    "author": "proudcat",
+    "author": "yulijun",
     "license": "MIT",
     "dependencies": {
       "pixi.js": "^5.2.1"
@@ -51,7 +57,7 @@
   }
   ```
   
-* create `src/index.html`。
+* 创建文件`src/index.html`。
 
   ```html
   <html>
@@ -60,12 +66,11 @@
     </head>
     <body>
     <canvas id="scene"></canvas>
-     <!-- we dont need import the entry js file here, webpack will help us to import the file automatically -->
-     <!-- we will explain more at "[step2] import webpack" -->
+     <!--这里不需要引入入口js，webpack会自动帮我们引入，“引入webpack”步骤再详细解释它-->
     </body>
   </html>
   ```
-* create entry js file `src/js/main.js`.
+* 创建文件`src/js/main.js`，这个文件是游戏入口文件。
 
   ```javascript
   import * as PIXI from 'pixi.js'
@@ -89,11 +94,11 @@
   });
   ```
 
-### [step2] import webpack
-> run `git checkout webpack` command to checkout`webpack` branch to learn this step。
-* run `npm install --save-dev webpack webpack-dev-server webpack-cli webpack-merge copy-webpack-plugin imagemin-webpack-plugin html-webpack-plugin` command to install the dependencies of webpack.
+### 引入webpack
+> 运行`git checkout webpack`切换到`webpack`分支即可看到这一步的示例。
+* 运行`npm install --save-dev webpack webpack-dev-server webpack-cli webpack-merge copy-webpack-plugin imagemin-webpack-plugin html-webpack-plugin`安装依赖。
 
-* create `webpack.common.js` file, this file is webpack common configuration.
+* 创建`webpack.common.js`文件，这个是webpack公共配置。
 
   ```javascript
   const path = require('path')
@@ -101,21 +106,18 @@
   const CopyWebpackPlugin = require('copy-webpack-plugin')
   const ImageminPlugin = require('imagemin-webpack-plugin').default
   module.exports = {
-
-    //context directory is src
     context: path.join(__dirname, 'src'),
     
-    //entry file of the project,(relative to context)
+    //游戏入口文件
     entry: ['./js/main.js'],
+    
     output: {
-
-      //distribution directory
+      //js文件最终发布到哪个路径
       path: path.resolve(__dirname, 'dist'),
-
       /**
-       * webpack will import the file for the index.html automatically,though the js file does not exist on disk.
-       * the js file will generated after webpack build the project, and the js will inserted at index.html automatically.
-       * [hash:8] means unique 8 digit hash generated everytime.
+       * 开发调试阶段webpack会自动处理这个文件让html引用到，虽然磁盘上不会有这个文件。
+       * 但是最终发布项目的时候会生成这个文件，并会插入到index.html中。
+       * [hash:8]的意思是生成随机的八位hash值，为了缓存更新问题。
        **/
       filename: 'game.min.[hash:8].js',
     },
@@ -123,7 +125,7 @@
   
   plugins: [
 
-    //copy all src/assets to dist/assets
+    //拷贝图片资源
     new CopyWebpackPlugin([
       { from: 'assets/',to:'assets/'}
     ], {
@@ -132,23 +134,24 @@
       copyUnmodified: true
     }),
 
-    //opimize all image file
+    //压缩图片资源
     new ImageminPlugin({
       test: /\.(jpe?g|png|gif|svg)$/i ,
 
+      //这种方式压缩在mac上效果不太好。
       // optipng: {
       //   optimizationLevel: 4
       // },
 
-      //this way seems better on mac.
+      //这个方式在mac上压缩效果更好,windows上尚未测试有待验证。
       pngquant: {
         verbose:true,
         quality: '80-90',
       }
-    })
+    }),
 
-    //copy html to dist and insert the js reference.
-    ,new HtmlPlugin({
+    //拷贝html，插入js。
+    new HtmlPlugin({
       file:path.join(__dirname,'dist','index.html'),
       template:'./index.html'
     })
@@ -156,7 +159,7 @@
   }
   ```
 
-* create `webpack.dev.js` file, the file used for debug phase.
+* 创建`webpack.dev.js`文件，这个配置文件用于开发调试阶段。
 
   ```javascript
   const path = require('path')
@@ -166,19 +169,16 @@
     devtool: 'inline-source-map',
     mode: 'none',
     devServer: {
-
-      //source code directory.
+      //调试时候源代码的位置
       contentBase: path.join(__dirname, 'src'),
       port: 8080,
-
-      //if host set to 127.0.0.1, you cannot access the server on local network.
       host: '0.0.0.0',
       hot: true
     }
   })
   ```
 
-* create `webpack.prod.js` file, the file is used for publishing the project(we will explain more detail at `[step3] import babel`).
+* 创建`webpack.prod.js`文件，这个配置文件用于发布项目(稍后在`引入babel`和`发布项目`步骤再详细介绍，这里暂时先贴出来)，这里配置了`babel`转码、`tree shake`和生成`source map`等。
 
   ```javascript
   const merge = require('webpack-merge')
@@ -206,7 +206,7 @@
     }
   })
   ```
-* create start command at `script`section in `package.json` file.
+* 在`package.json`中的`script`配置节增加启动命令。
 
   ```json
   {
@@ -215,7 +215,7 @@
     "description": "make pixi.js game with webpack",
     "main": "src/js/main.js",
     "keywords": ["pixi.js","webpack"],
-    "author": "proudcat",
+    "author": "yulijun",
     "license": "MIT",
     "scripts": {
       "start": "webpack-dev-server --open 'google chrome' --config webpack.dev.js"
@@ -234,20 +234,20 @@
     }
   }
   ```
-* now we have import the `webpack` successfully, run `npm start` to start the project, it will open google chrome browser automatically,the game is running！try to modify the `src/js/main.js` file and save,the page will refresh automatically and we can see the modification has taken effect！
+* 现已成功引入了`webpack`，运行`npm start`启动项目，会自动打开chrome浏览器，我们看到游戏已经跑起来了！尝试修改`src/js/main.js`文件，保存下，页面会自动刷新，我们的修改也已经能反映到页面上了！
 
-### [step3] import babel and publish the project
+### 构建项目
 
-> run `git checkout master` to checkout `master` branch to learn this final step.
+> 运行`git checkout master`切换到`master`分支即可看到这最终一步的示例。
 
-* with `babel`, you can write `ES6+` code（these lib is used fo converting ES6+ to ES5, and some pollyfill etc. look `babel` document for more details）。
+* 引入`babel`让你能使用最新的ES特性（这些库主要是为了ES6+转ES5，还有些pollyfill等等，这里不做过多的解释，具体可参考`babel`官方文档）。
 
   * `npm install --save-dev @babel/core @babel/plugin-transform-runtime @babel/preset-env babel-loader`
   * `npm install --save core-js @babel/runtime`
 
-* install `rimraf` to clean the publish directory `dist`. run `npm install --save-dev rimraf` command to install it.
+* 引入`rimraf`，用于在发布前删除发布目录`dist`。运行`npm install --save-dev rimraf`安装依赖。
 
-* create build command at `script` section in `package.json` file.
+* 在`package.json`中`script`节加入构建相关命令，然后`run npm build`就能成功打包了！
 
   ```json
   {
@@ -261,7 +261,7 @@
       "prebuild": "npm run clean",
       "build": "webpack --config webpack.prod.js"
     },
-    "author": "proudcat",
+    "author": "yulijun",
     "keywords": ["pixi.js","webpack","pixijs","web","game"],
     "license": "MIT",
     "devDependencies": {
@@ -282,4 +282,5 @@
     }
   }
   ```
-* congratulations! run `npm run build` command, you can build the project now! you will find out the project will be published in `dist` directory,`js`has combined and optimized, `es6+` has converted to `es5`. all image file has been optimized. 
+
+* 恭喜你，至此开发和构建环境已经全部完成，可尝试在源码中添加一些`es6+`语法，然后运行`npm run build`构建项目，最终打包好的项目会在`dist`目录中，`js`已经被混淆并合并，无用的引用通过`tree shake`已经被去掉了，包尺寸优化到了最小，而且所有`es6+`的语法均转换为`es5`以适应更多的浏览器。所有的图片也都进行了压缩处理。
