@@ -273,6 +273,9 @@
       "webpack": "^4.41.5",
       "webpack-cli": "^3.3.10",
       "webpack-dev-server": "^3.10.3",
+      "webpack-dev-server": "^3.10.3",
+      "copy-webpack-plugin": "^5.1.1",
+      "html-webpack-plugin": "^3.2.0",
       "webpack-merge": "^4.2.2"
     },
     "dependencies": {
