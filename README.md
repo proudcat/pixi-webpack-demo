@@ -15,7 +15,7 @@
   .
   ├── dist
   │   ├── index.html
-  │   ├── game.min.js
+  │   ├── game.min.879458fc.js
   │   └── assets
   │       └── bunny.png
   ├── src
@@ -67,8 +67,7 @@
     </head>
     <body>
     <canvas id="scene"></canvas>
-     <!-- 注意这里的game.min.js文件，稍微在“引入webpack”步骤详细解释它-->
-      <script type="text/javascript" src="game.min.js" charset="utf-8"></script>
+     <!--这里不需要引入入口js，webpack会自动帮我们引入，“引入webpack”步骤再详细解释它-->
     </body>
   </html>
   ```
@@ -98,7 +97,7 @@
 
 ### 引入webpack
 > 运行`git checkout webpack`切换到`webpack`分支即可看到这一步的示例。
-* 运行`npm install --save-dev webpack webpack-dev-server webpack-cli webpack-merge copy-webpack-plugin imagemin-webpack-plugin`安装依赖。
+* 运行`npm install --save-dev webpack webpack-dev-server webpack-cli webpack-merge copy-webpack-plugin imagemin-webpack-plugin html-webpack-plugin`安装依赖。
 
 * 创建`webpack.common.js`文件，这个是webpack公共配置。
 
@@ -113,15 +112,16 @@
       //js文件最终发布到哪个路径
       path: path.resolve(__dirname, 'dist'),
       /**
-       * 注意这个名字和刚才html里面的名字必须一致。
        * 开发调试阶段webpack会自动处理这个文件让html引用到，虽然磁盘上不会有这个文件。
-       * 但是最终发布项目的时候会生成这个文件。
+       * 但是最终发布项目的时候会生成这个文件，并会插入到index.html中。
+       * [hash:8]的意思是生成随机的八位hash值，为了缓存更新问题。
        **/
-      filename: 'game.min.js',
+      filename: 'game.min.[hash:8].js',
     },
     target: 'web',
   
   plugins: [
+
     //拷贝图片资源
     new CopyWebpackPlugin([
       { from: 'assets/',to:'assets/'}
@@ -130,20 +130,27 @@
       debug:'debug',
       copyUnmodified: true
     }),
+
     //压缩图片资源
     new ImageminPlugin({
       test: /\.(jpe?g|png|gif|svg)$/i ,
 
-      //这种方式压缩在mac上效果不太好
+      //这种方式压缩在mac上效果不太好。
       // optipng: {
       //   optimizationLevel: 4
       // },
 
-      //这个方式在mac上压缩效果更好,windows上尚未测试有待验证
+      //这个方式在mac上压缩效果更好,windows上尚未测试有待验证。
       pngquant: {
         verbose:true,
         quality: '80-90',
       }
+    })
+
+    //拷贝html，插入js。
+    ,new HtmlPlugin({
+      file:path.join(__dirname,'dist','index.html'),
+      template:'./index.html'
     })
   ]
   }
@@ -270,4 +277,4 @@
   }
   ```
 
-* 恭喜你，至此开发和构建环境已经全部完成，可尝试在源码中添加一些`es6+`语法，然后运行`npm run build`构建项目，最终打包好的项目会在`dist`目录中，`js`已经被混淆并合并为`game.min.js`，无用的引用通过`tree shake`已经被去掉了，包尺寸优化到了最小，而且所有`es6+`的语法均转换为`es5`以适应更多的浏览器。所有的图片也都进行了压缩处理。
+* 恭喜你，至此开发和构建环境已经全部完成，可尝试在源码中添加一些`es6+`语法，然后运行`npm run build`构建项目，最终打包好的项目会在`dist`目录中，`js`已经被混淆并合并，无用的引用通过`tree shake`已经被去掉了，包尺寸优化到了最小，而且所有`es6+`的语法均转换为`es5`以适应更多的浏览器。所有的图片也都进行了压缩处理。

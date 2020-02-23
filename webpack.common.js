@@ -1,4 +1,5 @@
 const path = require('path')
+const HtmlPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const ImageminPlugin = require('imagemin-webpack-plugin').default
 
@@ -8,7 +9,7 @@ module.exports = {
   // mode: 'none', // none development production
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'game.min.js',
+    filename: 'game.min.[hash:8].js',
   },
   target: 'web',
   
@@ -33,6 +34,10 @@ module.exports = {
         verbose:true,
         quality: '80-90',
       }
+    })    
+    ,new HtmlPlugin({
+      file:path.join(__dirname,'dist','index.html'),
+      template:'./index.html'
     })
   ]
 }
