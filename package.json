@@ -1,7 +1,7 @@
 {
   "name": "pixi-webpack-demo",
   "version": "1.0.0",
-  "description": "make pixi.js game with webpack and gulp",
+  "description": "make pixi.js game with webpack",
   "main": "src/js/main.js",
   "keywords": [
     "pixi.js",
@@ -18,6 +18,9 @@
   "devDependencies": {
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10",
+    "copy-webpack-plugin": "^5.1.1",
+    "html-webpack-plugin": "^3.2.0",
+    "imagemin-webpack-plugin": "^2.4.2",
     "webpack-dev-server": "^3.10.3",
     "webpack-merge": "^4.2.2"
   }
