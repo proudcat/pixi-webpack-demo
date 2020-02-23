@@ -24,12 +24,11 @@ module.exports = {
     new ImageminPlugin({
       test: /\.(jpe?g|png|gif|svg)$/i ,
 
-      //这种方式压缩在mac上效果不太好
       // optipng: {
       //   optimizationLevel: 4
       // },
 
-      //这个方式在mac上压缩效果更好
+      //seems better on mac this way
       pngquant: {
         verbose:true,
         quality: '80-90',
