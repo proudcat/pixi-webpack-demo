@@ -1,9 +1,9 @@
-> 本文介绍怎么使用`webpack`搭建`pixi.js`游戏的开发环境，怎么配置`babel`将`ES6+`代码最终转换为`ES5`，怎么利用`gulp`将`webpack`和其他脚本粘合一起优化项目并最终发布项目。
+> 本文介绍怎么使用`webpack`搭建`pixi.js`游戏的开发环境，怎么配置`babel`优化代码(tree shake)、混淆代码，并最终将`ES6+`转换为`ES5`,怎么优化`图片`资源并最终发布项目。
 
 ### 前提
 * 需要会简单使用`nodejs`，了解`package.json`，会简单使用`npm init`，`npm install`，`npm run`命令。
 
-* 需要稍微了解`webpack`和`gulp`。
+* 需要稍微了解`webpack`和`babel`。
 
 * 需要有`google chrome`浏览器。
 
@@ -15,7 +15,7 @@
   .
   ├── dist
   │   ├── index.html
-  │   ├── game.min.js
+  │   ├── game.min.879458fc.js
   │   └── assets
   │       └── bunny.png
   ├── src
@@ -25,7 +25,6 @@
   │   └── js
   │       ├── main.js
   │       └── scene.js
-  ├── gulpfile.js
   ├── package.json
   ├── webpack.common.js
   ├── webpack.dev.js
@@ -48,7 +47,7 @@
   {
     "name": "pixi-webpack-demo",
     "version": "1.0.0",
-    "description": "make pixi.js game with webpack and gulp",
+    "description": "make pixi.js game with webpack",
     "main": "src/js/main.js",
     "keywords": ["pixi.js","webpack"],
     "author": "yulijun",
@@ -68,8 +67,7 @@
     </head>
     <body>
     <canvas id="scene"></canvas>
-     <!-- 注意这里的game.min.js文件，稍微在“引入webpack”步骤详细解释它-->
-      <script type="text/javascript" src="game.min.js" charset="utf-8"></script>
+     <!--这里不需要引入入口js，webpack会自动帮我们引入，“引入webpack”步骤再详细解释它-->
     </body>
   </html>
   ```
@@ -99,12 +97,14 @@
 
 ### 引入webpack
 > 运行`git checkout webpack`切换到`webpack`分支即可看到这一步的示例。
-* 运行`npm install --save-dev webpack webpack-dev-server webpack-cli webpack-merge`安装依赖。
+* 运行`npm install --save-dev webpack webpack-dev-server webpack-cli webpack-merge copy-webpack-plugin imagemin-webpack-plugin html-webpack-plugin`安装依赖。
 
 * 创建`webpack.common.js`文件，这个是webpack公共配置。
 
   ```javascript
   const path = require('path')
+  const CopyWebpackPlugin = require('copy-webpack-plugin')
+  const ImageminPlugin = require('imagemin-webpack-plugin').default
   module.exports = {
     //游戏入口文件
     entry: ['./src/js/main.js'],
@@ -112,13 +112,47 @@
       //js文件最终发布到哪个路径
       path: path.resolve(__dirname, 'dist'),
       /**
-       * 注意这个名字和刚才html里面的名字必须一致。
        * 开发调试阶段webpack会自动处理这个文件让html引用到，虽然磁盘上不会有这个文件。
-       * 但是最终发布项目的时候会生成这个文件。
+       * 但是最终发布项目的时候会生成这个文件，并会插入到index.html中。
+       * [hash:8]的意思是生成随机的八位hash值，为了缓存更新问题。
        **/
-      filename: 'game.min.js',
+      filename: 'game.min.[hash:8].js',
     },
-    target: 'web'
+    target: 'web',
+  
+  plugins: [
+
+    //拷贝图片资源
+    new CopyWebpackPlugin([
+      { from: 'assets/',to:'assets/'}
+    ], {
+      ignore: [],
+      debug:'debug',
+      copyUnmodified: true
+    }),
+
+    //压缩图片资源
+    new ImageminPlugin({
+      test: /\.(jpe?g|png|gif|svg)$/i ,
+
+      //这种方式压缩在mac上效果不太好。
+      // optipng: {
+      //   optimizationLevel: 4
+      // },
+
+      //这个方式在mac上压缩效果更好,windows上尚未测试有待验证。
+      pngquant: {
+        verbose:true,
+        quality: '80-90',
+      }
+    })
+
+    //拷贝html，插入js。
+    ,new HtmlPlugin({
+      file:path.join(__dirname,'dist','index.html'),
+      template:'./index.html'
+    })
+  ]
   }
   ```
 
@@ -175,7 +209,7 @@
   {
     "name": "pixi-webpack-demo",
     "version": "1.0.0",
-    "description": "make pixi.js game with webpack and gulp",
+    "description": "make pixi.js game with webpack",
     "main": "src/js/main.js",
     "keywords": ["pixi.js","webpack"],
     "author": "yulijun",
@@ -205,63 +239,24 @@
   * `npm install --save-dev @babel/core @babel/plugin-transform-runtime @babel/preset-env babel-loader`
   * `npm install --save core-js @babel/runtime`
 
-* 引入`gulp`，运行`npm install --save-dev gulp gulp-if gulp-imagemin rimraf`安装依赖。
+* 引入`rimraf`，用于在发布前删除发布目录`dist`。运行`npm install --save-dev rimraf`安装依赖。
 
-* 创建`gulpfile.js`
-
-  ```javascript
-  const {
-    src,
-    dest,
-    parallel
-  } = require('gulp')
-  const path = require('path')
-  const gulpif = require('gulp-if')
-  const imagemin = require('gulp-imagemin')
-  const webpack = require('webpack')
-  const webpack_config = require('./webpack.prod')
-  
-  function copyAssets() {
-    return src(['src/**/*', '!src/js/**'])
-      .pipe(gulpif(
-        file => path.extname(file.relative) === '.png',
-        imagemin([imagemin.optipng({
-          optimizationLevel: 3
-        })], {
-          verbose: true
-        })))
-      .pipe(dest('dist'))
-  }
-  
-  function jsBundle(next) {
-    const compiler = webpack(webpack_config)
-    compiler.run((err, stats) => {
-      if (err || stats.hasErrors()) {
-        console.error(stats.toJson().errors)
-      }
-      next()
-    })
-  }
-  
-  exports.dist = parallel(copyAssets, jsBundle)
-  ```
-  
 * 在`package.json`中`script`节加入构建相关命令，然后`run npm build`就能成功打包了！
 
   ```json
   {
     "name": "pixi-webpack-demo",
     "version": "1.0.0",
-    "description": "make pixi.js game with webpack and gulp",
+    "description": "make pixi.js game with webpack",
     "main": "src/js/main.js",
     "scripts": {
       "start": "webpack-dev-server --open 'google chrome' --config webpack.dev.js",
       "clean": "rimraf dist",
       "prebuild": "npm run clean",
-      "build": "gulp dist"
+      "build": "webpack --config webpack.prod.js"
     },
     "author": "yulijun",
-    "keywords": ["pixi.js","webpack"],
+    "keywords": ["pixi.js","webpack","pixijs","web","game"],
     "license": "MIT",
     "devDependencies": {
       "@babel/core": "^7.8.4",
@@ -269,9 +264,6 @@
       "@babel/preset-env": "^7.8.4",
       "babel-loader": "^8.0.6",
       "rimraf": "^3.0.2",
-      "gulp": "^4.0.0",
-      "gulp-if": "^2.0.2",
-      "gulp-imagemin": "^4.1.0",
       "webpack": "^4.41.5",
       "webpack-cli": "^3.3.10",
       "webpack-dev-server": "^3.10.3",
@@ -285,7 +277,4 @@
   }
   ```
 
-* 恭喜你，至此开发和构建环境已经全部完成，可尝试在源码中添加一些`es6+`语法，然后运行`npm run build`构建项目，最终打包好的项目会在`dist`目录中，`js`已经被混淆并合并为`game.min.js`，无用的引用通过`tree shake`已经被去掉了，包尺寸优化到了最小，而且所有`es6+`的语法均转换为`es5`以适应更多的浏览器。所有的图片也都进行了压缩处理。
-
-### 结尾
-> 项目里之所以引用到`gulp`是因为没有找到`webpack`优化图片的插件，如果有小伙伴知道好用的插件，请务必不要吝啬，留言给我。
+* 恭喜你，至此开发和构建环境已经全部完成，可尝试在源码中添加一些`es6+`语法，然后运行`npm run build`构建项目，最终打包好的项目会在`dist`目录中，`js`已经被混淆并合并，无用的引用通过`tree shake`已经被去掉了，包尺寸优化到了最小，而且所有`es6+`的语法均转换为`es5`以适应更多的浏览器。所有的图片也都进行了压缩处理。

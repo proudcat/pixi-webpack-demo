@@ -1,7 +1,7 @@
 {
   "name": "pixi-webpack-demo",
   "version": "1.0.0",
-  "description": "make pixi.js game with webpack and gulp",
+  "description": "make pixi.js game with webpack",
   "main": "src/js/main.js",
   "keywords": [
     "pixi.js",
