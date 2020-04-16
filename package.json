@@ -10,10 +10,9 @@
   "author": "yulijun",
   "license": "MIT",
   "scripts": {
-    "start": "webpack-dev-server --open 'google chrome' --config webpack.dev.js",
+    "start": "cross-env NODE_ENV=development webpack-dev-server --open 'google chrome' --config webpack.dev.js",
     "clean": "rimraf dist",
-    "prebuild": "npm run clean",
-    "build": "webpack --config webpack.prod.js"
+    "build": "cross-env NODE_ENV=production webpack --config webpack.prod.js"
   },
   "dependencies": {
     "@babel/runtime": "^7.8.4",
@@ -25,7 +24,9 @@
     "@babel/plugin-transform-runtime": "^7.8.3",
     "@babel/preset-env": "^7.8.4",
     "babel-loader": "^8.0.6",
+    "clean-webpack-plugin": "^3.0.0",
     "copy-webpack-plugin": "^5.1.1",
+    "cross-env": "^7.0.2",
     "html-webpack-plugin": "^3.2.0",
     "imagemin-webpack-plugin": "^2.4.2",
     "rimraf": "^3.0.2",
